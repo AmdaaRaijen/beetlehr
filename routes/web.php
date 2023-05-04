@@ -58,5 +58,6 @@ Route::prefix('admin')->group(function () {
         require __DIR__ . '/admin/payroll.php';
         require __DIR__ . '/admin/noticeboard.php';
         require __DIR__ . '/admin/approval.php';
+        require __DIR__ . '/admin/fingerprint.php';
     });
 });

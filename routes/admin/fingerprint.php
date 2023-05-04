@@ -1,10 +1,9 @@
 <?php
 
-use App\Http\Controllers\Employees\Employee\EmployeeController;
-use App\Http\Controllers\Employees\Employee\AttendanceLogController;
+
 use App\Http\Controllers\Employees\Resign\ResignManagementController;
-
-
+use App\Http\Controllers\Fingerprint\FringerprintController;
+use Illuminate\Support\Facades\Route;
 /*
 |--------------------------------------------------------------------------
 | Fingerprint Routes
@@ -15,12 +14,9 @@ use App\Http\Controllers\Employees\Resign\ResignManagementController;
 */
 
 Route::prefix('fingerprint')->name('fingerprint.')->group(function () {
-    Route::controller(ApprovalController::class)->group(function () {
+    Route::controller(FringerprintController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('get-data', 'getData')->name('getdata');
-        Route::put('{id}/approve', 'approveApproval')->name('approve');
-        Route::put('{id}/reject', 'rejectApproval')->name('reject');
+        Route::delete('{id}', 'deleteFingerprint')->name('delete');
     });
 });
-
-

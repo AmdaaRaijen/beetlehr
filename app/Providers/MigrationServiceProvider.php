@@ -34,6 +34,7 @@ class MigrationServiceProvider extends ServiceProvider
             database_path('migrations/Approval'),
             database_path('migrations/Attendance'),
             database_path('migrations/NoticeBoard'),
+            database_path('migrations/Fingerprint'),
         ]);
     }
 }

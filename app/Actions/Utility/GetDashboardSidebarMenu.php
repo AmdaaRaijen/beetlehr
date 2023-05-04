@@ -72,6 +72,11 @@ class GetDashboardSidebarMenu
                 ]
             ],
             [
+                'text' => 'Fingerprint',
+                'url'  => route('fingerprint.index'),
+                'icon' => 'VFingerprint',
+            ],
+            [
                 'text' => 'Approval',
                 'url'  => route('approval.index'),
                 'icon' => 'VApproval',

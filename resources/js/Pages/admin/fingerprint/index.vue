@@ -6,7 +6,6 @@ export default {
 <script setup>
 import axios from "axios";
 import { notify } from "notiwind";
-import { Inertia } from "@inertiajs/inertia";
 import { object, string } from "vue-types";
 import { Head } from "@inertiajs/inertia-vue3";
 import { ref, onMounted, reactive } from "vue";
@@ -16,20 +15,14 @@ import VDropdownEditMenu from "@/components/VDropdownEditMenu/index.vue";
 import VDataTable from "@/components/VDataTable/index.vue";
 import VPagination from "@/components/VPagination/index.vue";
 import VBreadcrumb from "@/components/VBreadcrumb/index.vue";
+import VAlert from "@/components/VAlert/index.vue";
 import VLoading from "@/components/VLoading/index.vue";
 import VEmpty from "@/components/src/icons/VEmpty.vue";
-import VButton from "@/components/VButton/index.vue";
-import VSelect from "@/components/VSelect/index.vue";
-import VAlert from "@/components/VAlert/index.vue";
+import VBadge from "@/components/VBadge/index.vue";
 import VDetail from "@/components/src/icons/VDetail.vue";
-import VTrash from "@/components/src/icons/VTrash.vue";
-import VModalForm from "./ModalForm.vue";
-import VFilter from "./Filter.vue";
+// import VModalForm from "./ModalForm.vue";
 
 const query = ref([]);
-const searchFilter = ref("");
-const filterBranchValue = ref("all");
-const filter = ref({});
 const breadcrumb = [
     {
         name: "Dashboard",
@@ -37,14 +30,9 @@ const breadcrumb = [
         to: route("dashboard.index"),
     },
     {
-        name: "Employee",
-        active: false,
-        to: route("employment.employee.index"),
-    },
-    {
-        name: "Employee",
+        name: "Fingerprint",
         active: true,
-        to: route("employment.employee.index"),
+        to: route("fingerprint.index"),
     },
 ];
 const pagination = ref({
@@ -54,26 +42,10 @@ const pagination = ref({
     total: 0,
     total_pages: 1,
 });
-const alertData = reactive({
-    headerLabel: "",
-    contentLabel: "",
-    closeLabel: "",
-    submitLabel: "",
-});
-const updateAction = ref(false);
 const itemSelected = ref({});
-const openAlert = ref(false);
 const openModalForm = ref(false);
-const heads = [
-    "Name",
-    "Branch",
-    "Designation",
-    "Email",
-    "Begin Contract",
-    "End Contract",
-    "Role",
-    "",
-];
+const openAlert = ref(false);
+const heads = ["Name", "Seria Number", "Is Active", ""];
 const isLoading = ref(true);
 
 const props = defineProps({
@@ -83,14 +55,9 @@ const props = defineProps({
 
 const getData = debounce(async (page) => {
     axios
-        .get(route("employment.employee.getdata"), {
+        .get(route("fingerprint.getdata"), {
             params: {
                 page: page,
-                search: searchFilter.value,
-                filter_branch: filterBranchValue.value,
-                sort_by_name: filter.value.sort_by_name,
-                filter_role: filter.value.filter_role,
-                filter_designation: filter.value.filter_designation,
             },
         })
         .then((res) => {
@@ -110,79 +77,9 @@ const getData = debounce(async (page) => {
         .finally(() => (isLoading.value = false));
 }, 500);
 
-const nextPaginate = () => {
-    pagination.value.current_page += 1;
-    isLoading.value = true;
-    getData(pagination.value.current_page);
-};
-
-const previousPaginate = () => {
-    pagination.value.current_page -= 1;
-    isLoading.value = true;
-    getData(pagination.value.current_page);
-};
-
-const searchHandle = (search) => {
-    searchFilter.value = search;
-    isLoading.value = true;
-    getData(1);
-};
-
-const filterBranch = () => {
-    isLoading.value = true;
-    getData(1);
-};
-
-const applyFilter = (data) => {
-    filter.value = data;
-    isLoading.value = true;
-    getData(1);
-};
-
-const clearFilter = (data) => {
-    filter.value = data;
-    isLoading.value = true;
-    getData(1);
-};
-
-const handleAddModalForm = () => {
-    updateAction.value = false;
-    openModalForm.value = true;
-};
-
-const handleDetailEmployee = (data) => {
-    Inertia.visit(route("employment.employee.show", { id: data.id }));
-};
-
-const successSubmit = () => {
-    isLoading.value = true;
-    getData(pagination.value.current_page);
-};
-
-const closeModalForm = () => {
-    itemSelected.value = ref({});
-    openModalForm.value = false;
-};
-
-const alertDelete = (data) => {
-    itemSelected.value = data;
-    openAlert.value = true;
-    alertData.headerLabel = "Are you sure to delete this?";
-    alertData.contentLabel = "You won't be able to revert this!";
-    alertData.closeLabel = "Cancel";
-    alertData.submitLabel = "Delete";
-};
-
-const closeAlert = () => {
-    itemSelected.value = ref({});
-    openAlert.value = false;
-};
-
 const deleteEmployee = async () => {
     axios
-        .delete(
-            route("employment.employee.delete", { id: itemSelected.value.id })
-        )
+        .delete(route("fingerprint.delete", { id: itemSelected.value.id }))
         .then((res) => {
             notify(
                 {
@@ -208,6 +105,51 @@ const deleteEmployee = async () => {
         });
 };
 
+const nextPaginate = () => {
+    pagination.value.current_page += 1;
+    isLoading.value = true;
+    getData(pagination.value.current_page);
+};
+
+const previousPaginate = () => {
+    pagination.value.current_page -= 1;
+    isLoading.value = true;
+    getData(pagination.value.current_page);
+};
+
+const alertData = reactive({
+    headerLabel: "",
+    contentLabel: "",
+    closeLabel: "",
+    submitLabel: "",
+});
+const closeAlert = () => {
+    itemSelected.value = ref({});
+    openAlert.value = false;
+};
+const alertDelete = (data) => {
+    itemSelected.value = data;
+    openAlert.value = true;
+    alertData.headerLabel = "Are you sure to delete this?";
+    alertData.contentLabel = "You won't be able to revert this!";
+    alertData.closeLabel = "Cancel";
+    alertData.submitLabel = "Delete";
+};
+const handleDetailEmployee = (data) => {
+    itemSelected.value = data;
+    openModalForm.value = true;
+};
+
+const successSubmit = () => {
+    isLoading.value = true;
+    getData(pagination.value.current_page);
+};
+
+const closeModalForm = () => {
+    itemSelected.value = ref({});
+    openModalForm.value = false;
+};
+
 onMounted(() => {
     getData(1);
 });
@@ -217,15 +159,9 @@ onMounted(() => {
     <Head :title="props.title" />
     <VBreadcrumb :routes="breadcrumb" />
     <div class="mb-4 sm:mb-6 flex justify-between items-center">
-        <h1 class="text-2xl md:text-3xl text-slate-800 font-bold">Employee</h1>
-        <VSelect
-            placeholder="Select Branch"
-            v-model="filterBranchValue"
-            :options="additional.branches_filter"
-            class="w-1/6"
-            :clearable="false"
-            @update:modelValue="filterBranch"
-        />
+        <h1 class="text-2xl md:text-3xl text-slate-800 font-bold">
+            Fingerprint
+        </h1>
     </div>
     <div
         class="bg-white shadow-lg rounded-sm border border-slate-200"
@@ -233,28 +169,11 @@ onMounted(() => {
     >
         <header class="block justify-between items-center sm:flex py-6 px-4">
             <h2 class="font-semibold text-slate-800">
-                All Employee
+                All Fingerprint
                 <span class="text-slate-400 !font-medium ml">{{
                     pagination.total
                 }}</span>
             </h2>
-            <div
-                class="mt-3 sm:mt-0 flex space-x-2 sm:justify-between justify-end"
-            >
-                <!-- Filter -->
-                <VFilter
-                    @search="searchHandle"
-                    @apply="applyFilter"
-                    @clear="clearFilter"
-                    :additional="additional"
-                />
-                <VButton
-                    label="Add Employee"
-                    type="primary"
-                    @click="handleAddModalForm"
-                    class="mt-auto"
-                />
-            </div>
         </header>
 
         <VDataTable :heads="heads" :isLoading="isLoading">
@@ -279,19 +198,13 @@ onMounted(() => {
                 </td>
             </tr>
             <tr v-for="(data, index) in query" :key="index" v-else>
-                <td class="px-4 whitespace-nowrap h-16">{{ data.name }}</td>
-                <td class="px-4 whitespace-nowrap h-16">{{ data.branch }}</td>
                 <td class="px-4 whitespace-nowrap h-16">
-                    {{ data.designation }}
-                </td>
-                <td class="px-4 whitespace-nowrap h-16">{{ data.email }}</td>
-                <td class="px-4 whitespace-nowrap h-16">
-                    {{ data.begin_contract }}
+                    {{ data.name }}
                 </td>
                 <td class="px-4 whitespace-nowrap h-16">
-                    {{ data.end_contract }}
+                    {{ data.serial_number }}
                 </td>
-                <td class="px-4 whitespace-nowrap h-16">{{ data.role }}</td>
+                <td class="px-4 whitespace-nowrap h-16">{{ data.active }}</td>
                 <td class="px-4 whitespace-nowrap h-16 text-right">
                     <VDropdownEditMenu
                         class="relative inline-flex r-0"
@@ -334,12 +247,10 @@ onMounted(() => {
     </div>
     <VModalForm
         :data="itemSelected"
-        :update-action="updateAction"
         :open-dialog="openModalForm"
         @close="closeModalForm"
-        :additional="additional"
         @successSubmit="successSubmit"
-        ref="modalForm"
+        :additional="additional"
     />
     <VAlert
         :open-dialog="openAlert"
