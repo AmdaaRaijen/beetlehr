@@ -12,30 +12,111 @@ import VBadge from "@/components/VBadge/index.vue";
 
 const props = defineProps({
     openDialog: bool(),
+    updateAction: bool().def(false),
+    data: object().def({}),
     additional: object().def({}),
 });
 
 const emit = defineEmits(["close", "successSubmit"]);
 
 const branchSelectHandle = ref();
+const placementSelectHandle = ref();
 const isLoading = ref(false);
 const formError = ref({});
 const form = ref({});
 
 const openForm = () => {
-    form.value = ref({});
+    if (props.updateAction) {
+        form.value = Object.assign(form.value, props.data);
+        // handlebranch(form.value.branch_id)
+    } else {
+        form.value = ref({});
+    }
 };
 
 const closeForm = () => {
     form.value = ref({});
     formError.value = ref({});
-    branchSelectHandle.value.clearSelected();
 };
 
 const submit = async () => {
+    const fd = new FormData();
+    if (form.value.file != null) {
+        fd.append("file", form.value.file, form.value.file.name);
+    }
+
+    Object.keys(form.value).forEach((key) => {
+        fd.append(key, form.value[key]);
+    });
+
+    props.updateAction ? update() : create();
+};
+
+const update = async () => {
     isLoading.value = true;
     axios
-        .post(route("payroll.run.generate"), form.value)
+        .put(route("fingerprint.update", { id: props.data.id }), form.value)
+        .then((res) => {
+            emit("close");
+            emit("successSubmit");
+            form.value = ref({});
+            notify(
+                {
+                    type: "success",
+                    group: "top",
+                    text: res.data.meta.message,
+                },
+                2500
+            );
+        })
+        .catch((res) => {
+            // Handle validation errors
+            const result = res.response.data;
+            const metaError = res.response.data.meta?.error;
+            if (result.hasOwnProperty("errors")) {
+                formError.value = ref({});
+                Object.keys(result.errors).map((key) => {
+                    formError.value[key] = result.errors[key].toString();
+                });
+                console.log(form.value);
+            }
+
+            if (metaError) {
+                notify(
+                    {
+                        type: "error",
+                        group: "top",
+                        text: metaError,
+                    },
+                    2500
+                );
+            } else {
+                notify(
+                    {
+                        type: "error",
+                        group: "top",
+                        text: result.message,
+                    },
+                    2500
+                );
+            }
+        })
+        .finally(() => (isLoading.value = false));
+};
+
+const create = async () => {
+    isLoading.value = true;
+    const editData = {
+        ...form.value,
+    };
+    const serial_number = `SNI-${editData.serial_number}`;
+    const data = {
+        ...editData,
+        serial_number,
+    };
+
+    axios
+        .post(route("fingerprint.create"), data)
         .then((res) => {
             emit("close");
             emit("successSubmit");
@@ -87,7 +168,7 @@ const submit = async () => {
 <template>
     <VDialog
         :showModal="openDialog"
-        title="Generate Payroll"
+        :title="updateAction ? 'Update Fingerprint' : 'Create Fingerprint'"
         @opened="openForm"
         @closed="closeForm"
         size="xl"
@@ -107,35 +188,35 @@ const submit = async () => {
         </template>
         <template v-slot:content>
             <div class="grid grid-cols-2 gap-3">
+                <div class="col-span-2"></div>
                 <div class="col-span-2">
-                    <VSelect
-                        placeholder="Select Branch"
+                    <VInput
+                        placeholder="Insert Name"
+                        label="Employee Name"
                         :required="true"
-                        v-model="form.branch_id"
-                        :options="additional.branches_list"
+                        v-model="form.name"
+                        @update:modelValue="formError.name = ''"
+                        class="mt-3"
+                    />
+                    <VInput
+                        placeholder="Insert Serial Number"
+                        label="Serial Number"
+                        :required="true"
+                        v-model="form.serial_number"
+                        @update:modelValue="formError.serial_number = ''"
+                        class="mt-3"
+                    />
+                    <VSelect
+                        placeholder="Is Active"
+                        :required="true"
+                        v-model="form.is_active"
+                        :options="['Yes', 'No']"
                         label="Select Branch"
                         :errorMessage="formError.branch_id"
-                        @update:modelValue="formError.branch_id = ''"
+                        @update:modelValue="formError.is_active = ''"
                         ref="branchSelectHandle"
                     />
-                </div>
-                <div class="col-span-2">
-                    <label
-                        class="block text-sm font-medium text-slate-600 mb-1"
-                    >
-                        Select Date for Payroll
-                        <span class="text-rose-500">*</span>
-                    </label>
-                    <Datepicker
-                        v-model="form.date"
-                        range
-                        position="right"
-                        :enableTimePicker="false"
-                        :clearable="true"
-                        placeholder="Select Range Date"
-                        :class="{ date_error: formError.date }"
-                        @update:modelValue="formError.date = ''"
-                    />
+
                     <div
                         class="text-xs mt-1"
                         :class="[
@@ -159,7 +240,7 @@ const submit = async () => {
                 />
                 <VButton
                     :is-loading="isLoading"
-                    label="Generate"
+                    :label="updateAction ? 'Update' : 'Create'"
                     type="primary"
                     @click="submit"
                 />

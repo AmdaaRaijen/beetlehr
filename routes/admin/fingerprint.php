@@ -18,5 +18,7 @@ Route::prefix('fingerprint')->name('fingerprint.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('get-data', 'getData')->name('getdata');
         Route::delete('{id}', 'deleteFingerprint')->name('delete');
+        Route::put('{id}/update-data', 'editFingerprint')->name('update');
+        Route::post('create', 'createFingerprint')->name('create');
     });
 });

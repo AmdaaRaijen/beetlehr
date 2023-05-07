@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Fingerprint;
 
 use App\Http\Controllers\AdminBaseController;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Fingerprint\CreateFingerprintRequest;
 use App\Http\Requests\Employee\Employee\ValidateBasicInfoRequest;
 use App\Http\Resources\Fingerprint\FingerprintListResource;
 use App\Http\Resources\Fingerprint\SubmitFingerprintResource;
@@ -45,17 +46,28 @@ class FringerprintController extends AdminBaseController
         }
     }
 
-    public function createEmployee(ValidateBasicInfoRequest $request)
+    public function createFingerprint(CreateFingerprintRequest $request)
     {
         try {
             DB::beginTransaction();
-            $data = $this->fingerprintService->storeData($request);
+            $data = $this->fingerprintService->createData($request);
 
             $result = new SubmitFingerprintResource($data, 'Success Create Employee');
             DB::commit();
             return $this->respond($result);
         } catch (\Exception $e) {
             DB::rollBack();
+            return $this->exceptionError($e->getMessage());
+        }
+    }
+
+    
+    public function editFingerprint($id,CreateFingerprintRequest $request){
+        try {
+            $data = $this->fingerprintService->updateData($id,$request);
+            $result = new SubmitFingerprintResource($data,'Success update this shift');
+            return $this->respond($result);
+        } catch (\Exception $e) {
             return $this->exceptionError($e->getMessage());
         }
     }

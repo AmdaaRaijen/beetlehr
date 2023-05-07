@@ -17,11 +17,30 @@ class FingerPrintService
         return $query;
     }  
 
+    public function createData($request)
+    {
+
+        $inputs = $request->only(['name', 'serial_number', 'is_active']);
+        $inputs['is_active'] = ($inputs['is_active'] == 'Yes') ? true : false;
+
+        $fingerprint = Fingerprint::create($inputs);
+        return $fingerprint;
+    }
+
     public function deleteData($id)
     {
-        $employee = Fingerprint::findOrFail($id);
-        $employee->delete();
+        $fingerprint = Fingerprint::findOrFail($id);
+        $fingerprint->delete();
 
-        return $employee;
+        return $fingerprint;
+    }
+
+    public function updateData($id,$request){
+        $input = $request->only(['name','serial_number','is_active']);
+
+        $query = Fingerprint::findOrFail($id);
+        $query->update($input);
+
+        return $query;
     }
 }

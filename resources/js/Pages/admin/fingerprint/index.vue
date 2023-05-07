@@ -1,6 +1,7 @@
 <script>
 export default {
     layout: AppLayout,
+    components: { VTrash },
 };
 </script>
 <script setup>
@@ -19,8 +20,11 @@ import VAlert from "@/components/VAlert/index.vue";
 import VLoading from "@/components/VLoading/index.vue";
 import VEmpty from "@/components/src/icons/VEmpty.vue";
 import VBadge from "@/components/VBadge/index.vue";
+import VEdit from "@/components/src/icons/VEdit.vue";
+import VButton from "@/components/VButton/index.vue";
 import VDetail from "@/components/src/icons/VDetail.vue";
-// import VModalForm from "./ModalForm.vue";
+import VModalForm from "./ModalForm.vue";
+import VTrash from "@/components/src/icons/VTrash.vue";
 
 const query = ref([]);
 const breadcrumb = [
@@ -43,9 +47,10 @@ const pagination = ref({
     total_pages: 1,
 });
 const itemSelected = ref({});
+const updateAction = ref(false);
 const openModalForm = ref(false);
 const openAlert = ref(false);
-const heads = ["Name", "Seria Number", "Is Active", ""];
+const heads = ["Name", "Serial Number", "Is Active", ""];
 const isLoading = ref(true);
 
 const props = defineProps({
@@ -135,14 +140,21 @@ const alertDelete = (data) => {
     alertData.closeLabel = "Cancel";
     alertData.submitLabel = "Delete";
 };
-const handleDetailEmployee = (data) => {
-    itemSelected.value = data;
-    openModalForm.value = true;
-};
 
 const successSubmit = () => {
     isLoading.value = true;
     getData(pagination.value.current_page);
+};
+
+const handleAddModalForm = () => {
+    console.log("open");
+    updateAction.value = false;
+    openModalForm.value = true;
+};
+const handleEditModalForm = (data) => {
+    updateAction.value = true;
+    itemSelected.value = data;
+    openModalForm.value = true;
 };
 
 const closeModalForm = () => {
@@ -163,6 +175,7 @@ onMounted(() => {
             Fingerprint
         </h1>
     </div>
+
     <div
         class="bg-white shadow-lg rounded-sm border border-slate-200"
         :class="isLoading && 'min-h-[40vh] sm:min-h-[50vh]'"
@@ -174,6 +187,16 @@ onMounted(() => {
                     pagination.total
                 }}</span>
             </h2>
+            <div
+                class="mt-3 sm:mt-0 flex space-x-2 sm:justify-between justify-end"
+            >
+                <VButton
+                    label="Add Fingerprint"
+                    type="primary"
+                    @click="handleAddModalForm"
+                    class="mt-auto"
+                />
+            </div>
         </header>
 
         <VDataTable :heads="heads" :isLoading="isLoading">
@@ -213,13 +236,13 @@ onMounted(() => {
                     >
                         <li
                             class="cursor-pointer hover:bg-slate-100"
-                            @click="handleDetailEmployee(data)"
+                            @click="handleEditModalForm(data)"
                         >
                             <div class="flex items-center space-x-2 p-3">
                                 <span>
-                                    <VDetail color="primary" />
+                                    <VEdit />
                                 </span>
-                                <span>Detail</span>
+                                <span>Edit</span>
                             </div>
                         </li>
                         <li class="cursor-pointer hover:bg-slate-100">
@@ -248,6 +271,7 @@ onMounted(() => {
     <VModalForm
         :data="itemSelected"
         :open-dialog="openModalForm"
+        :update-action="updateAction"
         @close="closeModalForm"
         @successSubmit="successSubmit"
         :additional="additional"
